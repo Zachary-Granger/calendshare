@@ -1,0 +1,12 @@
+.parent {
+}
+
+.tableCell {
+	height: 40px;
+	width: 200px;
+	user-select: none;
+}
+
+.unselectable {
+	user-select: none;
+}
