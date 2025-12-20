@@ -1,5 +1,13 @@
+.parent {
+	border: solid gray 2px;
+	border-radius: 16px;
+	margin: 20px;
+	padding: 20px;
+	box-shadow: inset -12px -12px 100px -12px rgba(0.5,0.5,0.5,0.5);
+}
+
 .tableCell {
-	height: 40px;
+	height: 20px;
 	width: 200px;
 	user-select: none;
 }

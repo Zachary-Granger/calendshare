@@ -11,23 +11,15 @@ export default function Calendar() {
 	const [selectRightPosition, setSelectRightPosition] = useState(0);
 
 
-  const timeTable = [
-    "7 AM",
-    "8 AM",
-    "9 AM",
-    "10 AM",
-    "11 AM",
-    "12 AM",
-    "1 PM",
-    "2 PM",
-    "3 PM",
-    "4 PM",
-    "5 PM",
-    "6 PM",
-    "7 PM",
-    "8 PM",
-    "9 PM",
-  ];
+	const timeTable = [];
+	for (let i = 6.0; i <= 18.0; i += 0.5) {
+		const hours = i >= 13.0 ? Math.floor(i - 12.0) : Math.floor(i);
+		const minutes = i % 1 != 0 ? ":30" : ":00";
+		const amPm = i >= 12.0 ? " PM" : " AM";
+		const timeDisplay = hours.toString().padStart(2, '0') + minutes + amPm;
+
+		timeTable.push(timeDisplay);
+	}
 
   const beginSelectRange = (tableRowId: number, tableCell: HTMLTableCellElement) => {
     setSelectStart(tableRowId);
