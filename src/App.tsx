@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './App.css'
 import CalendarView from './components/CalendarView/CalendarView'
 import Login from './components/Login/Login';
+import Header from './components/Header/Header';
 
 function App() {
   const [authToken, setAuthToken] = useState(localStorage.getItem("authToken"));
@@ -9,7 +10,10 @@ function App() {
   return (
     <>
       {authToken ? (
-        <CalendarView />
+        <>
+          <Header />
+          <CalendarView />
+        </>
       ) : (
         <Login onLogin={setAuthToken} />
       )}
