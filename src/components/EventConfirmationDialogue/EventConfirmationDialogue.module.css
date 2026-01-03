@@ -1,0 +1,6 @@
+.eventConfirmationDialogue {
+	border: solid white 10px;
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+}
