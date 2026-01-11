@@ -1,4 +1,3 @@
-
 import classes from './PlaceholderEventTile.module.css'
 
 interface PlaceholderEventTileProperties {

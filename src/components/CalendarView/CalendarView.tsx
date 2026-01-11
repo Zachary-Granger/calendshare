@@ -5,7 +5,6 @@ export default function CalendarView() {
   return (
     <div className={classes.calendarView}>
       <Calendar />
-      <Calendar />
     </div>
   )
 }

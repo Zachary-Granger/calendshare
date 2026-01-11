@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import classes from './Calendar.module.css'
 import EventTile from "../EventTile/EventTile";
 import PlaceholderEventTile from "../PlaceholderEventTile/PlaceholderEventTile";
@@ -9,7 +9,28 @@ interface ConfirmationDetails {
   endTimestamp?: Date;
 }
 
+interface EventDetails {
+  id: string;
+  user_id: string;
+  start_timestamp: Date;
+  end_timestamp: Date;
+  title: string;
+  description?: string;
+  top_position: number;
+  bottom_position: number;
+  left_position: number;
+  right_position: number;
+}
+
+interface CellInfo {
+	timestamp: Date;
+	boundingRect: DOMRect;
+}
+
 export default function Calendar() {
+  const FETCH_EVENTS_ENDPOINT = "https://ng9l7u3ui2.execute-api.ca-central-1.amazonaws.com/fetch-events";
+  const JWT_TOKEN = localStorage.getItem("authToken");
+
   const [selectStart, setSelectStart] = useState(-1);
   const [selectEnd, setSelectEnd] = useState(-1);
   const [selectTopPosition, setSelectTopPosition] = useState(0);
@@ -20,6 +41,10 @@ export default function Calendar() {
   const [confirmingEvent, setConfirmingEvent] = useState(false);
   const [confirmationDetails, setConfirmationDetails] = useState<ConfirmationDetails>({})
 
+  const [events, setEvents] = useState<Array<EventDetails>>([]);
+
+	const cellRefs = useRef<CellInfo[]>([]);
+
   const timeTable: Date[] = [];
   const timestamp = new Date();
   timestamp.setHours(6, 0, 0, 0);
@@ -27,6 +52,91 @@ export default function Calendar() {
     timeTable.push(new Date(timestamp.getTime()));
     timestamp.setMinutes(timestamp.getMinutes() + 30);
   }
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        let startTimestamp = new Date();
+        startTimestamp.setHours(0, 0, 0, 0);
+        let endTimestamp = new Date(startTimestamp);
+        endTimestamp.setDate(endTimestamp.getDate() + 1);
+
+        const response = await fetch(FETCH_EVENTS_ENDPOINT, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${JWT_TOKEN}`
+          },
+          body: JSON.stringify({ startTimestamp, endTimestamp })
+        });
+
+        if (!response.ok) {
+          alert("Unable to fetch events!");
+        }
+
+        const result = await response.json();
+        const convertedResult = result.map((eventDetails: EventDetails) => ({
+          ...eventDetails,
+          start_timestamp: new Date(eventDetails.start_timestamp),
+          end_timestamp: new Date(eventDetails.end_timestamp),
+          top_position: 0,
+          bottom_position: 0,
+          left_position: 0,
+          right_position: 0
+        }));
+        setEvents(convertedResult);
+      } catch (err) {
+        alert("Something went wrong when fetching the events!");
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+	useLayoutEffect(() => {
+		if (events.length === 0 || cellRefs.current.length === 0) return;
+
+		// Guard Clause
+		// Check if any event currently has a 0 position.
+		// If all events are already positioned, we stop here to prevent an infinite loop.
+		const needPositioning = events.some(e => e.top_position === 0);
+		if (!needPositioning) return;
+
+		let updatedEvents = events;
+
+		for (const cell of cellRefs.current) {
+			for (const event of events) {
+				if (cell.timestamp.getTime() === event.start_timestamp.getTime()) {
+					updatedEvents = updatedEvents.map((item) => {
+						if (item.id === event.id) {
+							return { 
+								...item, 
+								top_position: cell.boundingRect.top,
+								left_position: cell.boundingRect.left,
+								right_position: cell.boundingRect.right
+							};
+						}
+						return item;
+					});
+
+				} else if (cell.timestamp.getTime() === event.end_timestamp.getTime()) {
+					updatedEvents = updatedEvents.map((item) => {
+						if (item.id === event.id) {
+							return { 
+								...item, 
+								bottom_position: cell.boundingRect.bottom
+							};
+						}
+						return item;
+					});
+
+				}
+			}
+		}
+
+		setEvents(updatedEvents);
+
+	}, [events]);
 
   const beginSelectRange = (tableRowId: number, tableCell: HTMLTableCellElement) => {
     if (!confirmingEvent) {
@@ -58,8 +168,8 @@ export default function Calendar() {
   }
 
   const confirmDialogue = () => {
-		alert("event saved!");
-		closeDialogue();
+    alert("event saved!");
+    closeDialogue();
   }
 
   const closeDialogue = () => {
@@ -85,8 +195,13 @@ export default function Calendar() {
         <tbody>
           {timeTable.map((entry, index) => (
             <tr key={index}>
-              <td className={classes.unselectable}>{entry.toLocaleTimeString([], { hour: "numeric", minute: "numeric" })}</td>
-              <td className={classes.tableCell} onMouseDown={(e) => beginSelectRange(index, e.currentTarget)} onMouseOver={(e) => continueSelectRange(index, e.currentTarget)} />
+              <td className={classes.unselectable}>
+                {entry.toLocaleTimeString([], { hour: "numeric", minute: "numeric" })}
+              </td>
+              <td className={classes.tableCell} 
+								ref={(el) => { if (el) cellRefs.current[index] = {timestamp: entry, boundingRect: el.getBoundingClientRect()}; }}
+								onMouseDown={(e) => beginSelectRange(index, e.currentTarget)} 
+								onMouseOver={(e) => continueSelectRange(index, e.currentTarget)} />
             </tr>
           ))}
         </tbody>
@@ -99,6 +214,18 @@ export default function Calendar() {
       {confirmingEvent && (
         <EventConfirmationDialogue confirmationDetails={confirmationDetails} confirmationCallback={confirmDialogue} cancellationCallback={closeDialogue} />
       )}
+
+      {events.map((event) => (
+        <EventTile
+          key={event.id}
+					title={event.title}
+					description={event.description}
+          topPosition={event.top_position}
+          bottomPosition={event.bottom_position}
+          leftPosition={event.left_position}
+          rightPosition={event.right_position}
+        />
+      ))}
 
     </div>
   )
