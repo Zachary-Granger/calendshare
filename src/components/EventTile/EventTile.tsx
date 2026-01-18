@@ -10,7 +10,6 @@ interface EventTileProperties {
 }
 
 export default function EventTile(props: EventTileProperties) {
-	console.log("Event tile props: ", props);
   return (
     <div 
 			className={classes.eventTile} 
