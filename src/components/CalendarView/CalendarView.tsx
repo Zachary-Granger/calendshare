@@ -51,7 +51,6 @@ export default function CalendarView() {
           }))
         }))
 
-        console.log("fetch results: ", convertedResults);
         setCalendarPayload(convertedResults);
       } catch (err) {
         alert("Something went wrong when fetching the events!");
