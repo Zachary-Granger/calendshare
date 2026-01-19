@@ -134,8 +134,9 @@ export default function Calendar(props: CalendarProps) {
   }
 
   const confirmDialogue = () => {
-    alert("event saved!");
     closeDialogue();
+    // to reset the data, I don't currently have a better way than refreshing the whole page
+    window.location.reload();
   }
 
   const closeDialogue = () => {
@@ -184,12 +185,16 @@ export default function Calendar(props: CalendarProps) {
       {events.map((event) => (
         <EventTile
           key={event.id}
+					event_id={event.id}
           title={event.title}
           description={event.description}
+					start_timestamp={event.start_timestamp}
+					end_timestamp={event.end_timestamp}
           topPosition={event.top_position}
           bottomPosition={event.bottom_position}
           leftPosition={event.left_position}
           rightPosition={event.right_position}
+					readonly={props.readonly}
         />
       ))}
 
