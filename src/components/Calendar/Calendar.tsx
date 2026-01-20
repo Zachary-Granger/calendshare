@@ -91,7 +91,7 @@ export default function Calendar(props: CalendarProps) {
             if (item.id === event.id) {
               return {
                 ...item,
-                bottom_position: cell.boundingRect.bottom
+                bottom_position: cell.boundingRect.top
               };
             }
             return item;
@@ -130,7 +130,7 @@ export default function Calendar(props: CalendarProps) {
 
       // calculate the top and bottom positions of the cell to pass to the Event Tile
       setSelectTopPosition(tableCell.getBoundingClientRect().top);
-      setSelectBottomPosition(tableCell.getBoundingClientRect().bottom);
+      setSelectBottomPosition(tableCell.getBoundingClientRect().top);
       setSelectLeftPosition(tableCell.getBoundingClientRect().left);
       setSelectRightPosition(tableCell.getBoundingClientRect().right);
     }
@@ -140,7 +140,7 @@ export default function Calendar(props: CalendarProps) {
     if (!props.readonly && !confirmingEvent) {
       setSelectEnd(tableRowId);
       // calculate the bottom position to expand the selection
-      setSelectBottomPosition(tableCell.getBoundingClientRect().bottom);
+      setSelectBottomPosition(tableCell.getBoundingClientRect().top);
     }
   }
 
@@ -179,7 +179,7 @@ export default function Calendar(props: CalendarProps) {
         <table onMouseUp={() => endSelectRange()}>
           <thead>
             <tr>
-              <th className={classes.unselectable}>time</th>
+              <th className={classes.unselectable}></th>
               <th className={classes.unselectable}>{props.username}</th>
             </tr>
           </thead>
