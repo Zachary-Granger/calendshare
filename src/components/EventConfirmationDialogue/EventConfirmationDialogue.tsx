@@ -3,8 +3,8 @@ import classes from './EventConfirmationDialogue.module.css'
 
 interface ConfirmationProps {
   confirmationDetails: ConfirmationDetails;
-	confirmationCallback: Function;
-	cancellationCallback: Function;
+  confirmationCallback: Function;
+  cancellationCallback: Function;
 }
 
 interface ConfirmationDetails {
@@ -20,15 +20,15 @@ export default function EventConfirmationDialogue({ confirmationDetails, confirm
   const [description, setDescription] = useState<string>("");
 
   const submit = async () => {
-		const startTimestamp = confirmationDetails.startTimestamp?.toISOString();
-		const endTimestamp = confirmationDetails.endTimestamp?.toISOString();
+    const startTimestamp = confirmationDetails.startTimestamp?.toISOString();
+    const endTimestamp = confirmationDetails.endTimestamp?.toISOString();
 
     const res = await fetch(CREATE_EVENT_ENDPOINT, {
       method: "POST",
       headers: {
-				"Content-Type": "application/json",
-				"Authorization": `Bearer ${JWT_TOKEN}`
-			},
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${JWT_TOKEN}`
+      },
       body: JSON.stringify({ startTimestamp, endTimestamp, title, description })
     });
 
@@ -36,20 +36,24 @@ export default function EventConfirmationDialogue({ confirmationDetails, confirm
       alert("Something went wrong. Failed to create event!");
       return;
     } else {
-			confirmationCallback();
-		}
+      confirmationCallback();
+    }
   }
 
   return (
     <dialog open className={classes.eventConfirmationDialogue}>
       <h2>CONFIRM DETAILS</h2>
       <input value={title} placeholder='Title' onChange={(e) => setTitle(e.target.value)} maxLength={100} />
-      <input value={description} placeholder='Description' onChange={(e) => setDescription(e.target.value)} maxLength={255} />
-      <p>Start time: {confirmationDetails.startTimestamp?.toLocaleTimeString([], { hour: "numeric", minute: "numeric" })}</p>
-      <p>End time: {confirmationDetails.endTimestamp?.toLocaleTimeString([], { hour: "numeric", minute: "numeric" })}</p>
+      <textarea value={description} placeholder='Description' onChange={(e) => setDescription(e.target.value)} maxLength={255} />
+      <div className={classes.timeRow}>
+        <p>Start time: {confirmationDetails.startTimestamp?.toLocaleTimeString([], { hour: "numeric", minute: "numeric" })}</p>
+      </div>
+      <div className={classes.timeRow}>
+        <p>End time: {confirmationDetails.endTimestamp?.toLocaleTimeString([], { hour: "numeric", minute: "numeric" })}</p>
+      </div>
       <div>
         <button onClick={submit}>confirm</button>
-        <button onClick={() => cancellationCallback()}>cancel</button>
+        <button className={classes.cancelBtn} onClick={() => cancellationCallback()}>cancel</button>
       </div>
     </dialog>
   )

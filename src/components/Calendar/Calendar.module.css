@@ -1,17 +1,71 @@
+/* Dark Theme Variables */
+:root {
+  --ed-bg: #1e1e24;          /* Dark Charcoal */
+  --ed-input-bg: #2b2b36;    /* Slightly lighter for inputs */
+  --ed-text: #eaeaea;        /* Off-white text */
+  --ed-accent: #d81b60;      /* Pink accent (matching your tiles) */
+  --ed-danger: #ef5350;      /* Soft Red for delete */
+  --ed-border: #444;
+}
+
 .parent {
-	border: solid gray 2px;
-	border-radius: 16px;
+	border: solid var(--ed-border) 2px;
+	background-color: var(--ed-bg);
+	color: var(--ed-text);
+	border-radius: 12px;
+	font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 	margin: 20px;
 	padding: 20px;
-	box-shadow: inset -12px -12px 100px -12px rgba(0.5,0.5,0.5,0.5);
+}
+
+.parent table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+/* Headers */
+.parent th {
+	padding: 10px;
+	text-transform: uppercase;
+	font-size: 14px;
+	letter-spacing: 1px;
+	color: var(--ed-accent);
+	text-align: center;
+}
+
+.parent th:first-child {
+	text-align: right;
+	padding-right: 15px;
 }
 
 .tableCell {
 	height: 20px;
 	width: 200px;
 	user-select: none;
+	background-color: transparent;
+}
+
+.tableCell:hover {
+	background-color: rgba(216, 27, 96, 0.07);
+	cursor: pointer;
 }
 
 .unselectable {
 	user-select: none;
+	text-align: right;
+	padding-right: 8px;
+	font-size: 12px;
+	vertical-align: top;
+	position: relative;
+	top: -10px
+}
+
+/* Hour lines */
+tr:nth-child(odd) .tableCell {
+	border-top: 2px solid var(--ed-input-bg);
+}
+
+/* Half hour lines */
+tr:nth-child(even) .tableCell {
+	border-top: 1px solid var(--ed-input-bg);
 }

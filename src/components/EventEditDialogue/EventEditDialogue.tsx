@@ -100,15 +100,21 @@ export default function EventEditDialogue({ editDetails, confirmationCallback, c
     <dialog open className={classes.eventEditDialogue}>
       <h2>EDIT DETAILS</h2>
       <input value={title} placeholder='Title' onChange={(e) => setTitle(e.target.value)} maxLength={100} />
-      <input value={description} placeholder='Description' onChange={(e) => setDescription(e.target.value)} maxLength={255} />
-      <p>Start time: {startTimestamp.toLocaleTimeString([], { hour: "numeric", minute: "numeric" })}</p>
-      <button onClick={decreaseStartTimestamp}>-</button><button onClick={increaseStartTimestamp}>+</button>
-      <p>End time: {endTimestamp.toLocaleTimeString([], { hour: "numeric", minute: "numeric" })}</p>
-      <button onClick={decreaseEndTimestamp}>-</button><button onClick={increaseEndTimestamp}>+</button>
+      <textarea value={description} placeholder='Description' onChange={(e) => setDescription(e.target.value)} maxLength={255} />
+      <div className={classes.timeRow}>
+        <p>Start time: {startTimestamp.toLocaleTimeString([], { hour: "numeric", minute: "numeric" })}</p>
+        <button className={classes.timeBtn} onClick={decreaseStartTimestamp}>-</button>
+				<button className={classes.timeBtn} onClick={increaseStartTimestamp}>+</button>
+      </div>
+      <div className={classes.timeRow}>
+        <p>End time: {endTimestamp.toLocaleTimeString([], { hour: "numeric", minute: "numeric" })}</p>
+        <button className={classes.timeBtn} onClick={decreaseEndTimestamp}>-</button>
+				<button className={classes.timeBtn} onClick={increaseEndTimestamp}>+</button>
+      </div>
       <div>
         <button onClick={editEvent}>save</button>
-        <button onClick={() => cancellationCallback()}>cancel</button>
-        <button onClick={deleteEvent}>DELETE EVENT</button>
+        <button className={classes.cancelBtn} onClick={() => cancellationCallback()}>cancel</button>
+        <button className={classes.deleteBtn} onClick={deleteEvent}>DELETE EVENT</button>
       </div>
     </dialog>
   )

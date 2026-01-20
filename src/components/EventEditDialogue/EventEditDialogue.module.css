@@ -1,7 +1,215 @@
+/* Dark Theme Variables */
+:root {
+  --ed-bg: #1e1e24;          /* Dark Charcoal */
+  --ed-input-bg: #2b2b36;    /* Slightly lighter for inputs */
+  --ed-text: #eaeaea;        /* Off-white text */
+  --ed-accent: #d81b60;      /* Pink accent (matching your tiles) */
+  --ed-danger: #ef5350;      /* Soft Red for delete */
+  --ed-border: #444;
+}
+
 .eventEditDialogue {
-	border: solid white 10px;
-	position: absolute;
-	top: 50%;
-	transform: translateY(-50%);
-	z-index: 1;
+  /* Positioning & Layout */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  
+  /* Box Model */
+  width: 400px;
+  max-width: 90vw;
+  padding: 24px;
+  border: 1px solid var(--ed-border);
+  border-radius: 12px;
+  
+  /* Visuals */
+  background-color: var(--ed-bg);
+  color: var(--ed-text);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  
+  /* Reset default dialog styles */
+  margin: 0;
+}
+
+/* Backdrop Dimming */
+.eventEditDialogue::backdrop {
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+.eventEditDialogue h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 18px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--ed-border);
+  padding-bottom: 10px;
+  color: var(--ed-accent);
+}
+
+/* Inputs & Textarea */
+.eventEditDialogue input,
+.eventEditDialogue textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 15px;
+  padding: 10px;
+  
+  background-color: var(--ed-input-bg);
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.eventEditDialogue textarea {
+  min-height: 80px; /* ample space for description */
+  resize: vertical;
+}
+
+.eventEditDialogue input:focus,
+.eventEditDialogue textarea:focus {
+  outline: none;
+  border-color: var(--ed-accent);
+}
+
+/* Time Controls Section */
+.eventEditDialogue p {
+  display: inline-block;
+  margin: 10px 10px 10px 0;
+  font-weight: bold;
+  font-size: 14px;
+  width: 130px; /* Align buttons nicely */
+}
+
+.eventEditDialogue button:not(:last-child):not(:nth-last-child(2)):not(:nth-last-child(3)):hover {
+  background-color: #444;
+}
+
+/* Footer Action Buttons Container */
+.eventEditDialogue > div {
+  margin-top: 25px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 15px;
+  border-top: 1px solid var(--ed-border);
+}
+
+/* Save Button */
+.eventEditDialogue > div button:nth-child(1) {
+  background-color: var(--ed-accent);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.eventEditDialogue > div button:nth-child(1):hover {
+  filter: brightness(1.1);
+}
+
+/* Cancel Button */
+.cancelBtn {
+  background-color: transparent;
+  color: #aaa;
+  border: 1px solid #555;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.eventEditDialogue > div button:nth-child(2):hover {
+  background-color: #333;
+  color: white;
+}
+
+/* Delete Button */
+.deleteBtn {
+  background-color: transparent;
+  color: var(--ed-danger);
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 12px;
+  margin-left: auto; /* Pushes delete button to the far left if using flex-direction: row-reverse, or keep standard */
+}
+
+.eventEditDialogue > div button:nth-child(3):hover {
+  text-decoration: underline;
+}
+
+/* Container for each time setting row */
+.timeRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.timeRow p {
+  margin: 0;
+  flex-grow: 1;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ed-text);
+}
+
+/* Styled +/- Buttons */
+.timeBtn {
+  background-color: var(--ed-input-bg);
+  color: var(--ed-text);
+  border: 1px solid var(--ed-border);
+  border-radius: 6px;
+  width: 36px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.timeBtn:hover {
+  background-color: #3e3e4a;
+  border-color: var(--ed-accent);
+  color: var(--ed-accent);
+}
+
+.timeBtn:active {
+  transform: scale(0.95);
+  background-color: var(--ed-accent);
+  color: white;
+}
+
+/* Action Footer adjustments */
+.eventEditDialogue > div {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Aligns Save/Cancel to left */
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--ed-border);
+}
+
+.eventEditDialogue > div button:last-child {
+  margin-left: auto; /* Keeps DELETE EVENT on the far right */
 }

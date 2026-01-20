@@ -13,7 +13,6 @@ export default function PlaceholderEventTile(props: PlaceholderEventTileProperti
 			className={classes.placeholderEventTile} 
 			style={{ top: props.topPosition, height: props.bottomPosition - props.topPosition, 
 				left: props.leftPosition, width: props.rightPosition - props.leftPosition }}>
-      This is a box on top
     </div>
     // <button className={classes.eventTile}>EVENT BUTTON!</button>
   )
