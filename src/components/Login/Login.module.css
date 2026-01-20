@@ -1,0 +1,28 @@
+/* Dark Theme Variables */
+:root {
+  --ed-bg: #1e1e24;          /* Dark Charcoal */
+  --ed-input-bg: #2b2b36;    /* Slightly lighter for inputs */
+  --ed-text: #eaeaea;        /* Off-white text */
+  --ed-accent: #d81b60;      /* Pink accent (matching your tiles) */
+  --ed-danger: #ef5350;      /* Soft Red for delete */
+  --ed-border: #444;
+}
+
+.loginContainer {
+	border: 2px solid var(--ed-border);
+	border-radius: 14px;
+	padding: 20px;
+	background-color: var(--ed-bg);
+}
+
+.row {
+	padding: 10px;
+	display: flex;
+	justify-content: space-evenly;
+}
+
+.row button {
+	padding: 10px;
+	background-color: var(--ed-input-bg);
+	color: var(--ed-text);
+}

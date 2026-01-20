@@ -1,4 +1,5 @@
 import { useState } from "react";
+import classes from './Login.module.css'
 
 interface LoginProps {
   onLogin: Function;
@@ -45,11 +46,17 @@ export default function Login({ onLogin }: LoginProps) {
   }
 
   return (
-    <>
-      <input value={username} onChange={e => setUsername(e.target.value)} onKeyDown={e => e.key === 'Enter' ? submit() : null} />
-      <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' ? submit() : null} />
-      <button onClick={submit}>Login</button>
-      <button onClick={register}>Register</button>
-    </>
+    <div className={classes.loginContainer}>
+      <div className={classes.row}>
+        <input value={username} placeholder="username" onChange={e => setUsername(e.target.value)} onKeyDown={e => e.key === 'Enter' ? submit() : null} />
+      </div>
+      <div className={classes.row}>
+        <input type="password" value={password} placeholder="password" onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' ? submit() : null} />
+      </div>
+      <div className={classes.row}>
+        <button onClick={submit}>Login</button>
+        <button onClick={register}>Register</button>
+      </div>
+    </div>
   )
 }
