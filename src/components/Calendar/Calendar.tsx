@@ -172,32 +172,45 @@ export default function Calendar(props: CalendarProps) {
 	}
 
   const beginSelectRange = (tableRowId: number, tableCell: HTMLTableCellElement) => {
-    if (!props.readonly && !confirmingEvent) {
+    if (!props.readonly && !confirmingEvent && tableRowId < timeTable.length - 1) {
       setSelectStart(tableRowId);
       setSelectEnd(tableRowId);
 
-      // calculate the top and bottom positions of the cell to pass to the Event Tile
-      setSelectTopPosition(tableCell.getBoundingClientRect().top);
-      setSelectBottomPosition(tableCell.getBoundingClientRect().top);
-      setSelectLeftPosition(tableCell.getBoundingClientRect().left);
-      setSelectRightPosition(tableCell.getBoundingClientRect().right);
+      const cellRect = tableCell.getBoundingClientRect();
+      const nextCellRect = cellRefs.current[tableRowId + 1]?.element.getBoundingClientRect();
+      setSelectTopPosition(cellRect.top);
+      setSelectBottomPosition(nextCellRect?.top ?? cellRect.bottom);
+      setSelectLeftPosition(cellRect.left);
+      setSelectRightPosition(cellRect.right);
     }
   }
 
-  const continueSelectRange = (tableRowId: number, tableCell: HTMLTableCellElement) => {
-    if (!props.readonly && !confirmingEvent) {
-      setSelectEnd(tableRowId);
-      // calculate the bottom position to expand the selection
-      setSelectBottomPosition(tableCell.getBoundingClientRect().top);
+  const continueSelectRange = (tableRowId: number) => {
+    if (!props.readonly && !confirmingEvent && selectStart > -1) {
+      const lastSlotIndex = timeTable.length - 2;
+      const hoveredRowId = Math.min(tableRowId, lastSlotIndex);
+      const firstSelectedRow = Math.min(selectStart, hoveredRowId);
+      const lastSelectedRow = Math.max(selectStart, hoveredRowId);
+      const firstCellRect = cellRefs.current[firstSelectedRow]?.element.getBoundingClientRect();
+      const endCellRect = cellRefs.current[lastSelectedRow + 1]?.element.getBoundingClientRect();
+      if (!firstCellRect || !endCellRect) return;
+
+      setSelectEnd(hoveredRowId);
+      setSelectTopPosition(firstCellRect.top);
+      setSelectBottomPosition(endCellRect.top);
+      setSelectLeftPosition(firstCellRect.left);
+      setSelectRightPosition(firstCellRect.right);
     }
   }
 
   const endSelectRange = () => {
-    if (!props.readonly) {
+    if (!props.readonly && selectStart > -1 && selectEnd > -1) {
+      const firstSelectedRow = Math.min(selectStart, selectEnd);
+      const lastSelectedRow = Math.max(selectStart, selectEnd);
       setConfirmingEvent(true);
       setConfirmationDetails({
-        startTimestamp: timeTable[selectStart],
-        endTimestamp: timeTable[selectEnd]
+        startTimestamp: timeTable[firstSelectedRow],
+        endTimestamp: timeTable[lastSelectedRow + 1]
       })
     }
   }
@@ -240,7 +253,7 @@ export default function Calendar(props: CalendarProps) {
                 <td className={classes.tableCell}
                   ref={(el) => { if (el) cellRefs.current[index] = { timestamp: entry, element: el }; }}
                   onMouseDown={(e) => beginSelectRange(index, e.currentTarget)}
-                  onMouseOver={(e) => continueSelectRange(index, e.currentTarget)} />
+                  onMouseOver={() => continueSelectRange(index)} />
               </tr>
             ))}
           </tbody>
