@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import classes from './EventTile.module.css'
 import EventEditDialogue from '../EventEditDialogue/EventEditDialogue';
+import EventDetailsDialogue from '../EventDetailsDialogue/EventDetailsDialogue';
 
 interface EventTileProperties {
   event_id: string;
@@ -18,6 +19,7 @@ interface EventTileProperties {
 export default function EventTile(props: EventTileProperties) {
 
   const [editing, setEditing] = useState(false);
+  const [viewing, setViewing] = useState(false);
 
   const confirmationCallback = () => {
     setEditing(false);
@@ -26,7 +28,9 @@ export default function EventTile(props: EventTileProperties) {
   }
 
 	const handleOnClick = () => {
-		if (!props.readonly) {
+		if (props.readonly) {
+      setViewing(true);
+    } else {
 			setEditing(prev => !prev);
 		}
 	}
@@ -60,6 +64,15 @@ export default function EventTile(props: EventTileProperties) {
           confirmationCallback={confirmationCallback}
           cancellationCallback={() => { setEditing(false) }}
           deleteCallback={deleteCallback}
+        />
+      }
+      {viewing &&
+        <EventDetailsDialogue
+          title={props.title}
+          description={props.description}
+          startTimestamp={props.start_timestamp}
+          endTimestamp={props.end_timestamp}
+          closeCallback={() => setViewing(false)}
         />
       }
     </>
