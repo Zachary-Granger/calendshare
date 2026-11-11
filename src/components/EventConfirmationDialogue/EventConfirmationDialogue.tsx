@@ -108,7 +108,16 @@ export default function EventConfirmationDialogue({ confirmationDetails, confirm
   }
 
   return (
-    <dialog open className={classes.eventConfirmationDialogue}>
+    <dialog
+      open
+      className={classes.eventConfirmationDialogue}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" && !event.shiftKey && !(event.target instanceof HTMLButtonElement)) {
+          event.preventDefault();
+          void submit();
+        }
+      }}
+    >
       <h2>CONFIRM DETAILS</h2>
       <input value={title} placeholder='Title' onChange={(e) => setTitle(e.target.value)} maxLength={100} />
       <textarea value={description} placeholder='Description' onChange={(e) => setDescription(e.target.value)} maxLength={255} />

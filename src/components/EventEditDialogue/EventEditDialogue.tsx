@@ -102,7 +102,16 @@ export default function EventEditDialogue({ editDetails, confirmationCallback, c
   }
 
   return (
-    <dialog open className={classes.eventEditDialogue}>
+    <dialog
+      open
+      className={classes.eventEditDialogue}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" && !event.shiftKey && !(event.target instanceof HTMLButtonElement)) {
+          event.preventDefault();
+          void editEvent();
+        }
+      }}
+    >
       <h2>EDIT DETAILS</h2>
       <input value={title} placeholder='Title' onChange={(e) => setTitle(e.target.value)} maxLength={100} />
       <textarea value={description} placeholder='Description' onChange={(e) => setDescription(e.target.value)} maxLength={255} />
