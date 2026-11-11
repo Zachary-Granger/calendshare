@@ -3,9 +3,9 @@ import classes from './EventEditDialogue.module.css'
 
 interface EditProps {
   editDetails: EditDetails;
-  confirmationCallback: Function;
-  cancellationCallback: Function;
-  deleteCallback: Function;
+  confirmationCallback: () => void;
+  cancellationCallback: () => void;
+  deleteCallback: () => void;
   timeChangeCallback: (startTimestamp: Date, endTimestamp: Date) => void;
 }
 

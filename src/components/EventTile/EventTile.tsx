@@ -15,6 +15,7 @@ interface EventTileProperties {
   rightPosition: number;
   readonly: boolean;
   timeChangeCallback: (startTimestamp: Date, endTimestamp: Date) => void;
+  refreshEvents: () => Promise<void>;
 }
 
 export default function EventTile(props: EventTileProperties) {
@@ -24,8 +25,7 @@ export default function EventTile(props: EventTileProperties) {
 
   const confirmationCallback = () => {
     setEditing(false);
-    // to reset the data, I don't currently have a better way than refreshing the whole page
-    window.location.reload();
+    void props.refreshEvents();
   }
 
 	const handleOnClick = () => {
@@ -38,8 +38,7 @@ export default function EventTile(props: EventTileProperties) {
 
   const deleteCallback = () => {
     setEditing(false);
-    // to reset the data, I don't currently have a better way than refreshing the whole page
-    window.location.reload();
+    void props.refreshEvents();
   }
 
   return (

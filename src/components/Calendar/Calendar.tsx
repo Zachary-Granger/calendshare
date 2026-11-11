@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import classes from './Calendar.module.css'
 import EventTile from "../EventTile/EventTile";
 import PlaceholderEventTile from "../PlaceholderEventTile/PlaceholderEventTile";
@@ -32,6 +32,7 @@ interface CalendarProps {
   user_id: string;
   username: string;
   readonly: boolean;
+  refreshEvents: () => Promise<void>;
 }
 
 export default function Calendar(props: CalendarProps) {
@@ -52,7 +53,7 @@ export default function Calendar(props: CalendarProps) {
 
   const cellRefs = useRef<CellInfo[]>([]);
 
-  const getCellTopPosition = (timestamp: Date) => {
+  const getCellTopPosition = useCallback((timestamp: Date) => {
     const cells = cellRefs.current;
     if (cells.length < 2) return undefined;
 
@@ -78,9 +79,9 @@ export default function Calendar(props: CalendarProps) {
       (afterCell.timestamp.getTime() - beforeCell.timestamp.getTime());
 
     return beforeRect.top + (afterRect.top - beforeRect.top) * timeRatio;
-  };
+  }, []);
 
-  const getPreviewBounds = (startTimestamp: Date, endTimestamp: Date) => {
+  const getPreviewBounds = useCallback((startTimestamp: Date, endTimestamp: Date) => {
     const top = getCellTopPosition(startTimestamp);
     const bottom = getCellTopPosition(endTimestamp);
     const firstCell = cellRefs.current[0];
@@ -88,7 +89,7 @@ export default function Calendar(props: CalendarProps) {
 
     const rect = firstCell.element.getBoundingClientRect();
     return { top, bottom, left: rect.left, right: rect.right };
-  };
+  }, [getCellTopPosition]);
 
   const updateSelectionPreview = (startTimestamp: Date, endTimestamp: Date) => {
     const bounds = getPreviewBounds(startTimestamp, endTimestamp);
@@ -125,33 +126,41 @@ export default function Calendar(props: CalendarProps) {
   }
 
   useLayoutEffect(() => {
+    setEvents(props.events.map(event => {
+      const bounds = getPreviewBounds(event.start_timestamp, event.end_timestamp);
+      if (!bounds) return event;
+
+      return {
+        ...event,
+        top_position: bounds.top,
+        bottom_position: bounds.bottom,
+        left_position: bounds.left,
+        right_position: bounds.right
+      };
+    }));
+  }, [props.events, getPreviewBounds]);
+
+  useLayoutEffect(() => {
     const positionEvents = () => {
       if (cellRefs.current.length === 0) return;
 
       setEvents(currentEvents => currentEvents.map(event => {
-        const startCell = cellRefs.current.find(
-          cell => cell.timestamp.getTime() === event.start_timestamp.getTime()
-        );
-        const endCell = cellRefs.current.find(
-          cell => cell.timestamp.getTime() === event.end_timestamp.getTime()
-        );
-        const startRect = startCell?.element.getBoundingClientRect();
-        const endRect = endCell?.element.getBoundingClientRect();
+        const bounds = getPreviewBounds(event.start_timestamp, event.end_timestamp);
+        if (!bounds) return event;
 
         return {
           ...event,
-          top_position: startRect?.top ?? event.top_position,
-          bottom_position: endRect?.top ?? event.bottom_position,
-          left_position: startRect?.left ?? event.left_position,
-          right_position: startRect?.right ?? event.right_position
+          top_position: bounds.top,
+          bottom_position: bounds.bottom,
+          left_position: bounds.left,
+          right_position: bounds.right
         };
       }));
     };
 
-    positionEvents();
     window.addEventListener("resize", positionEvents);
     return () => window.removeEventListener("resize", positionEvents);
-  }, []);
+  }, [getPreviewBounds]);
 
 	const deleteConnection = async () => {
     const res = await fetch(DELETE_CONNECTION_ENDPOINT, {
@@ -217,8 +226,7 @@ export default function Calendar(props: CalendarProps) {
 
   const confirmDialogue = () => {
     closeDialogue();
-    // to reset the data, I don't currently have a better way than refreshing the whole page
-    window.location.reload();
+    void props.refreshEvents();
   }
 
   const closeDialogue = () => {
@@ -286,6 +294,7 @@ export default function Calendar(props: CalendarProps) {
             rightPosition={event.right_position}
             readonly={props.readonly}
             timeChangeCallback={(startTimestamp, endTimestamp) => updateEventPreview(event.id, startTimestamp, endTimestamp)}
+            refreshEvents={props.refreshEvents}
           />
         ))}
 

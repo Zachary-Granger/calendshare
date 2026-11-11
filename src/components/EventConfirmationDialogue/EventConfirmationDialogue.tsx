@@ -3,8 +3,8 @@ import classes from './EventConfirmationDialogue.module.css'
 
 interface ConfirmationProps {
   confirmationDetails: ConfirmationDetails;
-  confirmationCallback: Function;
-  cancellationCallback: Function;
+  confirmationCallback: () => void;
+  cancellationCallback: () => void;
   timeChangeCallback: (startTimestamp: Date, endTimestamp: Date) => void;
 }
 
