@@ -61,6 +61,63 @@ export default function CalendarView() {
     void refreshEvents();
   }, [refreshEvents]);
 
+  useEffect(() => {
+    let intervalId: number | undefined;
+    let isActive = document.visibilityState === "visible" && document.hasFocus();
+
+    const stopPolling = () => {
+      if (intervalId !== undefined) {
+        window.clearInterval(intervalId);
+        intervalId = undefined;
+      }
+    };
+
+    const startPolling = () => {
+      if (intervalId !== undefined) return;
+
+      intervalId = window.setInterval(() => {
+        if (document.visibilityState === "visible" && document.hasFocus()) {
+          void refreshEvents();
+        } else {
+          isActive = false;
+          stopPolling();
+        }
+      }, 10_000);
+    };
+
+    const updateActivity = () => {
+      const active = document.visibilityState === "visible" && document.hasFocus();
+      if (active && !isActive) {
+        void refreshEvents();
+      }
+
+      isActive = active;
+      if (active) {
+        startPolling();
+      } else {
+        stopPolling();
+      }
+    };
+
+    const handleBlur = () => {
+      isActive = false;
+      stopPolling();
+    };
+
+    window.addEventListener("focus", updateActivity);
+    window.addEventListener("blur", handleBlur);
+    document.addEventListener("visibilitychange", updateActivity);
+
+    if (isActive) startPolling();
+
+    return () => {
+      stopPolling();
+      window.removeEventListener("focus", updateActivity);
+      window.removeEventListener("blur", handleBlur);
+      document.removeEventListener("visibilitychange", updateActivity);
+    };
+  }, [refreshEvents]);
+
   return (
     <div className={classes.calendarView}>
       {calendarPayload?.map(payload => (
