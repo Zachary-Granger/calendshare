@@ -17,12 +17,12 @@
   
   /* Visual Styling */
   background-color: var(--et-bg);
+  border: 1px solid var(--et-primary);
   border-left: 4px solid var(--et-primary); /* The "Accent Bar" look */
   border-radius: 4px; /* Softens the corners */
   padding: 8px 10px;
   
   /* Depth */
-  box-shadow: 0 2px 4px var(--et-shadow);
   transition: all 0.2s ease-in-out;
   
   /* Overflow Handling (Crucial for small events) */
