@@ -5,6 +5,7 @@ interface ConfirmationProps {
   confirmationDetails: ConfirmationDetails;
   confirmationCallback: Function;
   cancellationCallback: Function;
+  timeChangeCallback: (startTimestamp: Date, endTimestamp: Date) => void;
 }
 
 interface ConfirmationDetails {
@@ -12,7 +13,7 @@ interface ConfirmationDetails {
   endTimestamp?: Date;
 }
 
-export default function EventConfirmationDialogue({ confirmationDetails, confirmationCallback, cancellationCallback }: ConfirmationProps) {
+export default function EventConfirmationDialogue({ confirmationDetails, confirmationCallback, cancellationCallback, timeChangeCallback }: ConfirmationProps) {
   const CREATE_EVENT_ENDPOINT = "https://ng9l7u3ui2.execute-api.ca-central-1.amazonaws.com/events"
   const JWT_TOKEN = localStorage.getItem("authToken");
   const THIRTY_MINUTES = 30 * 60 * 1000;
@@ -52,6 +53,7 @@ export default function EventConfirmationDialogue({ confirmationDetails, confirm
       updatedTimestamp < getMaximumTimestamp(startTimestamp)
     ) {
       setStartTimestamp(updatedTimestamp);
+      timeChangeCallback(updatedTimestamp, endTimestamp);
     }
   }
 
@@ -65,6 +67,7 @@ export default function EventConfirmationDialogue({ confirmationDetails, confirm
       updatedTimestamp <= getMaximumTimestamp(startTimestamp)
     ) {
       setEndTimestamp(updatedTimestamp);
+      timeChangeCallback(startTimestamp, updatedTimestamp);
     }
   }
 

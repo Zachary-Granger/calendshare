@@ -52,6 +52,70 @@ export default function Calendar(props: CalendarProps) {
 
   const cellRefs = useRef<CellInfo[]>([]);
 
+  const getCellTopPosition = (timestamp: Date) => {
+    const cells = cellRefs.current;
+    if (cells.length < 2) return undefined;
+
+    const timestampValue = timestamp.getTime();
+    const exactCell = cells.find(cell => cell.timestamp.getTime() === timestampValue);
+    if (exactCell) return exactCell.element.getBoundingClientRect().top;
+
+    const nextCellIndex = cells.findIndex(cell => cell.timestamp.getTime() > timestampValue);
+    const beforeCell = nextCellIndex <= 0
+      ? cells[0]
+      : nextCellIndex === -1
+        ? cells[cells.length - 2]
+        : cells[nextCellIndex - 1];
+    const afterCell = nextCellIndex <= 0
+      ? cells[1]
+      : nextCellIndex === -1
+        ? cells[cells.length - 1]
+        : cells[nextCellIndex];
+
+    const beforeRect = beforeCell.element.getBoundingClientRect();
+    const afterRect = afterCell.element.getBoundingClientRect();
+    const timeRatio = (timestampValue - beforeCell.timestamp.getTime()) /
+      (afterCell.timestamp.getTime() - beforeCell.timestamp.getTime());
+
+    return beforeRect.top + (afterRect.top - beforeRect.top) * timeRatio;
+  };
+
+  const getPreviewBounds = (startTimestamp: Date, endTimestamp: Date) => {
+    const top = getCellTopPosition(startTimestamp);
+    const bottom = getCellTopPosition(endTimestamp);
+    const firstCell = cellRefs.current[0];
+    if (top === undefined || bottom === undefined || !firstCell) return undefined;
+
+    const rect = firstCell.element.getBoundingClientRect();
+    return { top, bottom, left: rect.left, right: rect.right };
+  };
+
+  const updateSelectionPreview = (startTimestamp: Date, endTimestamp: Date) => {
+    const bounds = getPreviewBounds(startTimestamp, endTimestamp);
+    if (!bounds) return;
+
+    setSelectTopPosition(bounds.top);
+    setSelectBottomPosition(bounds.bottom);
+    setSelectLeftPosition(bounds.left);
+    setSelectRightPosition(bounds.right);
+  };
+
+  const updateEventPreview = (eventId: string, startTimestamp: Date, endTimestamp: Date) => {
+    const bounds = getPreviewBounds(startTimestamp, endTimestamp);
+    if (!bounds) return;
+
+    setEvents(currentEvents => currentEvents.map(event => event.id === eventId
+      ? {
+          ...event,
+          top_position: bounds.top,
+          bottom_position: bounds.bottom,
+          left_position: bounds.left,
+          right_position: bounds.right
+        }
+      : event
+    ));
+  };
+
   const timeTable: Date[] = [];
   const timestamp = new Date();
   timestamp.setHours(6, 0, 0, 0);
@@ -187,7 +251,12 @@ export default function Calendar(props: CalendarProps) {
         )}
 
         {confirmingEvent && (
-          <EventConfirmationDialogue confirmationDetails={confirmationDetails} confirmationCallback={confirmDialogue} cancellationCallback={closeDialogue} />
+          <EventConfirmationDialogue
+            confirmationDetails={confirmationDetails}
+            confirmationCallback={confirmDialogue}
+            cancellationCallback={closeDialogue}
+            timeChangeCallback={updateSelectionPreview}
+          />
         )}
 
         {events.map((event) => (
@@ -203,6 +272,7 @@ export default function Calendar(props: CalendarProps) {
             leftPosition={event.left_position}
             rightPosition={event.right_position}
             readonly={props.readonly}
+            timeChangeCallback={(startTimestamp, endTimestamp) => updateEventPreview(event.id, startTimestamp, endTimestamp)}
           />
         ))}
 

@@ -6,6 +6,7 @@ interface EditProps {
   confirmationCallback: Function;
   cancellationCallback: Function;
   deleteCallback: Function;
+  timeChangeCallback: (startTimestamp: Date, endTimestamp: Date) => void;
 }
 
 interface EditDetails {
@@ -16,7 +17,7 @@ interface EditDetails {
   endTimestamp: Date;
 }
 
-export default function EventEditDialogue({ editDetails, confirmationCallback, cancellationCallback, deleteCallback }: EditProps) {
+export default function EventEditDialogue({ editDetails, confirmationCallback, cancellationCallback, deleteCallback, timeChangeCallback }: EditProps) {
   const EDIT_EVENT_ENDPOINT = "https://ng9l7u3ui2.execute-api.ca-central-1.amazonaws.com/events"
   const JWT_TOKEN = localStorage.getItem("authToken");
   const THIRTY_MINUTES = 30 * 60 * 1000;
@@ -71,6 +72,7 @@ export default function EventEditDialogue({ editDetails, confirmationCallback, c
       const newStartDate: Date = new Date(startTimestamp.getTime());
       newStartDate.setTime(startTimestamp.getTime() + THIRTY_MINUTES);
       setStartTimestamp(newStartDate);
+      timeChangeCallback(newStartDate, endTimestamp);
     }
   }
 
@@ -79,6 +81,7 @@ export default function EventEditDialogue({ editDetails, confirmationCallback, c
     const newStartDate: Date = new Date(startTimestamp.getTime());
     newStartDate.setTime(startTimestamp.getTime() - THIRTY_MINUTES);
     setStartTimestamp(newStartDate);
+    timeChangeCallback(newStartDate, endTimestamp);
   }
 
   const increaseEndTimestamp = () => {
@@ -86,6 +89,7 @@ export default function EventEditDialogue({ editDetails, confirmationCallback, c
     const newEndDate: Date = new Date(endTimestamp.getTime());
     newEndDate.setTime(endTimestamp.getTime() + THIRTY_MINUTES);
     setEndTimestamp(newEndDate);
+    timeChangeCallback(startTimestamp, newEndDate);
   }
 
   const decreaseEndTimestamp = () => {
@@ -93,6 +97,7 @@ export default function EventEditDialogue({ editDetails, confirmationCallback, c
       const newEndDate: Date = new Date(endTimestamp.getTime());
       newEndDate.setTime(endTimestamp.getTime() - THIRTY_MINUTES);
       setEndTimestamp(newEndDate);
+      timeChangeCallback(startTimestamp, newEndDate);
     }
   }
 

@@ -14,6 +14,7 @@ interface EventTileProperties {
   leftPosition: number;
   rightPosition: number;
   readonly: boolean;
+  timeChangeCallback: (startTimestamp: Date, endTimestamp: Date) => void;
 }
 
 export default function EventTile(props: EventTileProperties) {
@@ -62,8 +63,12 @@ export default function EventTile(props: EventTileProperties) {
             endTimestamp: props.end_timestamp
           }}
           confirmationCallback={confirmationCallback}
-          cancellationCallback={() => { setEditing(false) }}
+          cancellationCallback={() => {
+            props.timeChangeCallback(props.start_timestamp, props.end_timestamp);
+            setEditing(false);
+          }}
           deleteCallback={deleteCallback}
+          timeChangeCallback={props.timeChangeCallback}
         />
       }
       {viewing &&
