@@ -68,7 +68,7 @@ export default function EventEditDialogue({ editDetails, confirmationCallback, c
 
   const increaseStartTimestamp = () => {
     if (startTimestamp.getTime() + THIRTY_MINUTES < endTimestamp.getTime()) {
-      let newStartDate: Date = new Date(startTimestamp.getTime());
+      const newStartDate: Date = new Date(startTimestamp.getTime());
       newStartDate.setTime(startTimestamp.getTime() + THIRTY_MINUTES);
       setStartTimestamp(newStartDate);
     }
@@ -76,21 +76,21 @@ export default function EventEditDialogue({ editDetails, confirmationCallback, c
 
   const decreaseStartTimestamp = () => {
     //TODO: protect against going earlier than 6am
-    let newStartDate: Date = new Date(startTimestamp.getTime());
+    const newStartDate: Date = new Date(startTimestamp.getTime());
     newStartDate.setTime(startTimestamp.getTime() - THIRTY_MINUTES);
     setStartTimestamp(newStartDate);
   }
 
   const increaseEndTimestamp = () => {
     //TODO: protext against going later than 6pm
-    let newEndDate: Date = new Date(endTimestamp.getTime());
+    const newEndDate: Date = new Date(endTimestamp.getTime());
     newEndDate.setTime(endTimestamp.getTime() + THIRTY_MINUTES);
     setEndTimestamp(newEndDate);
   }
 
   const decreaseEndTimestamp = () => {
     if (endTimestamp.getTime() - THIRTY_MINUTES > startTimestamp.getTime()) {
-      let newEndDate: Date = new Date(endTimestamp.getTime());
+      const newEndDate: Date = new Date(endTimestamp.getTime());
       newEndDate.setTime(endTimestamp.getTime() - THIRTY_MINUTES);
       setEndTimestamp(newEndDate);
     }

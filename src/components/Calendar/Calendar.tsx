@@ -24,7 +24,7 @@ export interface EventDetails {
 
 interface CellInfo {
   timestamp: Date;
-  boundingRect: DOMRect;
+  element: HTMLTableCellElement;
 }
 
 interface CalendarProps {
@@ -61,49 +61,33 @@ export default function Calendar(props: CalendarProps) {
   }
 
   useLayoutEffect(() => {
-    if (events.length === 0 || cellRefs.current.length === 0) return;
+    const positionEvents = () => {
+      if (cellRefs.current.length === 0) return;
 
-    // Guard Clause
-    // Check if any event currently has a 0 position.
-    // If all events are already positioned, we stop here to prevent an infinite loop.
-    const needPositioning = events.some(e => e.top_position === 0);
-    if (!needPositioning) return;
+      setEvents(currentEvents => currentEvents.map(event => {
+        const startCell = cellRefs.current.find(
+          cell => cell.timestamp.getTime() === event.start_timestamp.getTime()
+        );
+        const endCell = cellRefs.current.find(
+          cell => cell.timestamp.getTime() === event.end_timestamp.getTime()
+        );
+        const startRect = startCell?.element.getBoundingClientRect();
+        const endRect = endCell?.element.getBoundingClientRect();
 
-    let updatedEvents = events;
+        return {
+          ...event,
+          top_position: startRect?.top ?? event.top_position,
+          bottom_position: endRect?.top ?? event.bottom_position,
+          left_position: startRect?.left ?? event.left_position,
+          right_position: startRect?.right ?? event.right_position
+        };
+      }));
+    };
 
-    for (const cell of cellRefs.current) {
-      for (const event of events) {
-        if (cell.timestamp.getTime() === event.start_timestamp.getTime()) {
-          updatedEvents = updatedEvents.map((item) => {
-            if (item.id === event.id) {
-              return {
-                ...item,
-                top_position: cell.boundingRect.top,
-                left_position: cell.boundingRect.left,
-                right_position: cell.boundingRect.right
-              };
-            }
-            return item;
-          });
-
-        } else if (cell.timestamp.getTime() === event.end_timestamp.getTime()) {
-          updatedEvents = updatedEvents.map((item) => {
-            if (item.id === event.id) {
-              return {
-                ...item,
-                bottom_position: cell.boundingRect.top
-              };
-            }
-            return item;
-          });
-
-        }
-      }
-    }
-
-    setEvents(updatedEvents);
-
-  }, [events]);
+    positionEvents();
+    window.addEventListener("resize", positionEvents);
+    return () => window.removeEventListener("resize", positionEvents);
+  }, []);
 
 	const deleteConnection = async () => {
     const res = await fetch(DELETE_CONNECTION_ENDPOINT, {
@@ -190,7 +174,7 @@ export default function Calendar(props: CalendarProps) {
                   {entry.toLocaleTimeString([], { hour: "numeric", minute: "numeric" })}
                 </td>
                 <td className={classes.tableCell}
-                  ref={(el) => { if (el) cellRefs.current[index] = { timestamp: entry, boundingRect: el.getBoundingClientRect() }; }}
+                  ref={(el) => { if (el) cellRefs.current[index] = { timestamp: entry, element: el }; }}
                   onMouseDown={(e) => beginSelectRange(index, e.currentTarget)}
                   onMouseOver={(e) => continueSelectRange(index, e.currentTarget)} />
               </tr>

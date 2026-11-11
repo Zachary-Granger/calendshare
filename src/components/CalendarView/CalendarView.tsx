@@ -18,9 +18,9 @@ export default function CalendarView() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        let startTimestamp = new Date();
+        const startTimestamp = new Date();
         startTimestamp.setHours(0, 0, 0, 0);
-        let endTimestamp = new Date(startTimestamp);
+        const endTimestamp = new Date(startTimestamp);
         endTimestamp.setDate(endTimestamp.getDate() + 1);
 
         const response = await fetch(FETCH_EVENTS_ENDPOINT, {
