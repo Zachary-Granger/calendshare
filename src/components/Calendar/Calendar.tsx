@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import classes from './Calendar.module.css'
 import EventTile from "../EventTile/EventTile";
 import PlaceholderEventTile from "../PlaceholderEventTile/PlaceholderEventTile";
@@ -24,7 +24,7 @@ export interface EventDetails {
 
 interface CellInfo {
   timestamp: Date;
-  boundingRect: DOMRect;
+  element: HTMLTableCellElement;
 }
 
 interface CalendarProps {
@@ -32,6 +32,7 @@ interface CalendarProps {
   user_id: string;
   username: string;
   readonly: boolean;
+  refreshEvents: () => Promise<void>;
 }
 
 export default function Calendar(props: CalendarProps) {
@@ -52,6 +53,70 @@ export default function Calendar(props: CalendarProps) {
 
   const cellRefs = useRef<CellInfo[]>([]);
 
+  const getCellTopPosition = useCallback((timestamp: Date) => {
+    const cells = cellRefs.current;
+    if (cells.length < 2) return undefined;
+
+    const timestampValue = timestamp.getTime();
+    const exactCell = cells.find(cell => cell.timestamp.getTime() === timestampValue);
+    if (exactCell) return exactCell.element.getBoundingClientRect().top;
+
+    const nextCellIndex = cells.findIndex(cell => cell.timestamp.getTime() > timestampValue);
+    const beforeCell = nextCellIndex <= 0
+      ? cells[0]
+      : nextCellIndex === -1
+        ? cells[cells.length - 2]
+        : cells[nextCellIndex - 1];
+    const afterCell = nextCellIndex <= 0
+      ? cells[1]
+      : nextCellIndex === -1
+        ? cells[cells.length - 1]
+        : cells[nextCellIndex];
+
+    const beforeRect = beforeCell.element.getBoundingClientRect();
+    const afterRect = afterCell.element.getBoundingClientRect();
+    const timeRatio = (timestampValue - beforeCell.timestamp.getTime()) /
+      (afterCell.timestamp.getTime() - beforeCell.timestamp.getTime());
+
+    return beforeRect.top + (afterRect.top - beforeRect.top) * timeRatio;
+  }, []);
+
+  const getPreviewBounds = useCallback((startTimestamp: Date, endTimestamp: Date) => {
+    const top = getCellTopPosition(startTimestamp);
+    const bottom = getCellTopPosition(endTimestamp);
+    const firstCell = cellRefs.current[0];
+    if (top === undefined || bottom === undefined || !firstCell) return undefined;
+
+    const rect = firstCell.element.getBoundingClientRect();
+    return { top, bottom, left: rect.left, right: rect.right };
+  }, [getCellTopPosition]);
+
+  const updateSelectionPreview = (startTimestamp: Date, endTimestamp: Date) => {
+    const bounds = getPreviewBounds(startTimestamp, endTimestamp);
+    if (!bounds) return;
+
+    setSelectTopPosition(bounds.top);
+    setSelectBottomPosition(bounds.bottom);
+    setSelectLeftPosition(bounds.left);
+    setSelectRightPosition(bounds.right);
+  };
+
+  const updateEventPreview = (eventId: string, startTimestamp: Date, endTimestamp: Date) => {
+    const bounds = getPreviewBounds(startTimestamp, endTimestamp);
+    if (!bounds) return;
+
+    setEvents(currentEvents => currentEvents.map(event => event.id === eventId
+      ? {
+          ...event,
+          top_position: bounds.top,
+          bottom_position: bounds.bottom,
+          left_position: bounds.left,
+          right_position: bounds.right
+        }
+      : event
+    ));
+  };
+
   const timeTable: Date[] = [];
   const timestamp = new Date();
   timestamp.setHours(6, 0, 0, 0);
@@ -61,49 +126,41 @@ export default function Calendar(props: CalendarProps) {
   }
 
   useLayoutEffect(() => {
-    if (events.length === 0 || cellRefs.current.length === 0) return;
+    setEvents(props.events.map(event => {
+      const bounds = getPreviewBounds(event.start_timestamp, event.end_timestamp);
+      if (!bounds) return event;
 
-    // Guard Clause
-    // Check if any event currently has a 0 position.
-    // If all events are already positioned, we stop here to prevent an infinite loop.
-    const needPositioning = events.some(e => e.top_position === 0);
-    if (!needPositioning) return;
+      return {
+        ...event,
+        top_position: bounds.top,
+        bottom_position: bounds.bottom,
+        left_position: bounds.left,
+        right_position: bounds.right
+      };
+    }));
+  }, [props.events, getPreviewBounds]);
 
-    let updatedEvents = events;
+  useLayoutEffect(() => {
+    const positionEvents = () => {
+      if (cellRefs.current.length === 0) return;
 
-    for (const cell of cellRefs.current) {
-      for (const event of events) {
-        if (cell.timestamp.getTime() === event.start_timestamp.getTime()) {
-          updatedEvents = updatedEvents.map((item) => {
-            if (item.id === event.id) {
-              return {
-                ...item,
-                top_position: cell.boundingRect.top,
-                left_position: cell.boundingRect.left,
-                right_position: cell.boundingRect.right
-              };
-            }
-            return item;
-          });
+      setEvents(currentEvents => currentEvents.map(event => {
+        const bounds = getPreviewBounds(event.start_timestamp, event.end_timestamp);
+        if (!bounds) return event;
 
-        } else if (cell.timestamp.getTime() === event.end_timestamp.getTime()) {
-          updatedEvents = updatedEvents.map((item) => {
-            if (item.id === event.id) {
-              return {
-                ...item,
-                bottom_position: cell.boundingRect.top
-              };
-            }
-            return item;
-          });
+        return {
+          ...event,
+          top_position: bounds.top,
+          bottom_position: bounds.bottom,
+          left_position: bounds.left,
+          right_position: bounds.right
+        };
+      }));
+    };
 
-        }
-      }
-    }
-
-    setEvents(updatedEvents);
-
-  }, [events]);
+    window.addEventListener("resize", positionEvents);
+    return () => window.removeEventListener("resize", positionEvents);
+  }, [getPreviewBounds]);
 
 	const deleteConnection = async () => {
     const res = await fetch(DELETE_CONNECTION_ENDPOINT, {
@@ -124,40 +181,52 @@ export default function Calendar(props: CalendarProps) {
 	}
 
   const beginSelectRange = (tableRowId: number, tableCell: HTMLTableCellElement) => {
-    if (!props.readonly && !confirmingEvent) {
+    if (!props.readonly && !confirmingEvent && tableRowId < timeTable.length - 1) {
       setSelectStart(tableRowId);
       setSelectEnd(tableRowId);
 
-      // calculate the top and bottom positions of the cell to pass to the Event Tile
-      setSelectTopPosition(tableCell.getBoundingClientRect().top);
-      setSelectBottomPosition(tableCell.getBoundingClientRect().top);
-      setSelectLeftPosition(tableCell.getBoundingClientRect().left);
-      setSelectRightPosition(tableCell.getBoundingClientRect().right);
+      const cellRect = tableCell.getBoundingClientRect();
+      const nextCellRect = cellRefs.current[tableRowId + 1]?.element.getBoundingClientRect();
+      setSelectTopPosition(cellRect.top);
+      setSelectBottomPosition(nextCellRect?.top ?? cellRect.bottom);
+      setSelectLeftPosition(cellRect.left);
+      setSelectRightPosition(cellRect.right);
     }
   }
 
-  const continueSelectRange = (tableRowId: number, tableCell: HTMLTableCellElement) => {
-    if (!props.readonly && !confirmingEvent) {
-      setSelectEnd(tableRowId);
-      // calculate the bottom position to expand the selection
-      setSelectBottomPosition(tableCell.getBoundingClientRect().top);
+  const continueSelectRange = (tableRowId: number) => {
+    if (!props.readonly && !confirmingEvent && selectStart > -1) {
+      const lastSlotIndex = timeTable.length - 2;
+      const hoveredRowId = Math.min(tableRowId, lastSlotIndex);
+      const firstSelectedRow = Math.min(selectStart, hoveredRowId);
+      const lastSelectedRow = Math.max(selectStart, hoveredRowId);
+      const firstCellRect = cellRefs.current[firstSelectedRow]?.element.getBoundingClientRect();
+      const endCellRect = cellRefs.current[lastSelectedRow + 1]?.element.getBoundingClientRect();
+      if (!firstCellRect || !endCellRect) return;
+
+      setSelectEnd(hoveredRowId);
+      setSelectTopPosition(firstCellRect.top);
+      setSelectBottomPosition(endCellRect.top);
+      setSelectLeftPosition(firstCellRect.left);
+      setSelectRightPosition(firstCellRect.right);
     }
   }
 
   const endSelectRange = () => {
-    if (!props.readonly) {
+    if (!props.readonly && selectStart > -1 && selectEnd > -1) {
+      const firstSelectedRow = Math.min(selectStart, selectEnd);
+      const lastSelectedRow = Math.max(selectStart, selectEnd);
       setConfirmingEvent(true);
       setConfirmationDetails({
-        startTimestamp: timeTable[selectStart],
-        endTimestamp: timeTable[selectEnd]
+        startTimestamp: timeTable[firstSelectedRow],
+        endTimestamp: timeTable[lastSelectedRow + 1]
       })
     }
   }
 
   const confirmDialogue = () => {
     closeDialogue();
-    // to reset the data, I don't currently have a better way than refreshing the whole page
-    window.location.reload();
+    void props.refreshEvents();
   }
 
   const closeDialogue = () => {
@@ -190,9 +259,9 @@ export default function Calendar(props: CalendarProps) {
                   {entry.toLocaleTimeString([], { hour: "numeric", minute: "numeric" })}
                 </td>
                 <td className={classes.tableCell}
-                  ref={(el) => { if (el) cellRefs.current[index] = { timestamp: entry, boundingRect: el.getBoundingClientRect() }; }}
+                  ref={(el) => { if (el) cellRefs.current[index] = { timestamp: entry, element: el }; }}
                   onMouseDown={(e) => beginSelectRange(index, e.currentTarget)}
-                  onMouseOver={(e) => continueSelectRange(index, e.currentTarget)} />
+                  onMouseOver={() => continueSelectRange(index)} />
               </tr>
             ))}
           </tbody>
@@ -203,7 +272,12 @@ export default function Calendar(props: CalendarProps) {
         )}
 
         {confirmingEvent && (
-          <EventConfirmationDialogue confirmationDetails={confirmationDetails} confirmationCallback={confirmDialogue} cancellationCallback={closeDialogue} />
+          <EventConfirmationDialogue
+            confirmationDetails={confirmationDetails}
+            confirmationCallback={confirmDialogue}
+            cancellationCallback={closeDialogue}
+            timeChangeCallback={updateSelectionPreview}
+          />
         )}
 
         {events.map((event) => (
@@ -219,6 +293,8 @@ export default function Calendar(props: CalendarProps) {
             leftPosition={event.left_position}
             rightPosition={event.right_position}
             readonly={props.readonly}
+            timeChangeCallback={(startTimestamp, endTimestamp) => updateEventPreview(event.id, startTimestamp, endTimestamp)}
+            refreshEvents={props.refreshEvents}
           />
         ))}
 

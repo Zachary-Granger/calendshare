@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import classes from './EventTile.module.css'
 import EventEditDialogue from '../EventEditDialogue/EventEditDialogue';
+import EventDetailsDialogue from '../EventDetailsDialogue/EventDetailsDialogue';
 
 interface EventTileProperties {
   event_id: string;
@@ -13,34 +14,37 @@ interface EventTileProperties {
   leftPosition: number;
   rightPosition: number;
   readonly: boolean;
+  timeChangeCallback: (startTimestamp: Date, endTimestamp: Date) => void;
+  refreshEvents: () => Promise<void>;
 }
 
 export default function EventTile(props: EventTileProperties) {
 
   const [editing, setEditing] = useState(false);
+  const [viewing, setViewing] = useState(false);
 
   const confirmationCallback = () => {
     setEditing(false);
-    // to reset the data, I don't currently have a better way than refreshing the whole page
-    window.location.reload();
+    void props.refreshEvents();
   }
 
 	const handleOnClick = () => {
-		if (!props.readonly) {
+		if (props.readonly) {
+      setViewing(true);
+    } else {
 			setEditing(prev => !prev);
 		}
 	}
 
   const deleteCallback = () => {
     setEditing(false);
-    // to reset the data, I don't currently have a better way than refreshing the whole page
-    window.location.reload();
+    void props.refreshEvents();
   }
 
   return (
     <>
       <div onClick={handleOnClick}
-        className={classes.eventTile}
+        className={`${classes.eventTile} ${classes.entranceAnimation}`}
         style={{
           top: props.topPosition, height: props.bottomPosition - props.topPosition,
           left: props.leftPosition, width: props.rightPosition - props.leftPosition
@@ -58,8 +62,21 @@ export default function EventTile(props: EventTileProperties) {
             endTimestamp: props.end_timestamp
           }}
           confirmationCallback={confirmationCallback}
-          cancellationCallback={() => { setEditing(false) }}
+          cancellationCallback={() => {
+            props.timeChangeCallback(props.start_timestamp, props.end_timestamp);
+            setEditing(false);
+          }}
           deleteCallback={deleteCallback}
+          timeChangeCallback={props.timeChangeCallback}
+        />
+      }
+      {viewing &&
+        <EventDetailsDialogue
+          title={props.title}
+          description={props.description}
+          startTimestamp={props.start_timestamp}
+          endTimestamp={props.end_timestamp}
+          closeCallback={() => setViewing(false)}
         />
       }
     </>

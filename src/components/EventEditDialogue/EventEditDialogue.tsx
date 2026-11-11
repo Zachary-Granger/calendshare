@@ -3,9 +3,10 @@ import classes from './EventEditDialogue.module.css'
 
 interface EditProps {
   editDetails: EditDetails;
-  confirmationCallback: Function;
-  cancellationCallback: Function;
-  deleteCallback: Function;
+  confirmationCallback: () => void;
+  cancellationCallback: () => void;
+  deleteCallback: () => void;
+  timeChangeCallback: (startTimestamp: Date, endTimestamp: Date) => void;
 }
 
 interface EditDetails {
@@ -16,7 +17,7 @@ interface EditDetails {
   endTimestamp: Date;
 }
 
-export default function EventEditDialogue({ editDetails, confirmationCallback, cancellationCallback, deleteCallback }: EditProps) {
+export default function EventEditDialogue({ editDetails, confirmationCallback, cancellationCallback, deleteCallback, timeChangeCallback }: EditProps) {
   const EDIT_EVENT_ENDPOINT = "https://ng9l7u3ui2.execute-api.ca-central-1.amazonaws.com/events"
   const JWT_TOKEN = localStorage.getItem("authToken");
   const THIRTY_MINUTES = 30 * 60 * 1000;
@@ -68,36 +69,49 @@ export default function EventEditDialogue({ editDetails, confirmationCallback, c
 
   const increaseStartTimestamp = () => {
     if (startTimestamp.getTime() + THIRTY_MINUTES < endTimestamp.getTime()) {
-      let newStartDate: Date = new Date(startTimestamp.getTime());
+      const newStartDate: Date = new Date(startTimestamp.getTime());
       newStartDate.setTime(startTimestamp.getTime() + THIRTY_MINUTES);
       setStartTimestamp(newStartDate);
+      timeChangeCallback(newStartDate, endTimestamp);
     }
   }
 
   const decreaseStartTimestamp = () => {
     //TODO: protect against going earlier than 6am
-    let newStartDate: Date = new Date(startTimestamp.getTime());
+    const newStartDate: Date = new Date(startTimestamp.getTime());
     newStartDate.setTime(startTimestamp.getTime() - THIRTY_MINUTES);
     setStartTimestamp(newStartDate);
+    timeChangeCallback(newStartDate, endTimestamp);
   }
 
   const increaseEndTimestamp = () => {
     //TODO: protext against going later than 6pm
-    let newEndDate: Date = new Date(endTimestamp.getTime());
+    const newEndDate: Date = new Date(endTimestamp.getTime());
     newEndDate.setTime(endTimestamp.getTime() + THIRTY_MINUTES);
     setEndTimestamp(newEndDate);
+    timeChangeCallback(startTimestamp, newEndDate);
   }
 
   const decreaseEndTimestamp = () => {
     if (endTimestamp.getTime() - THIRTY_MINUTES > startTimestamp.getTime()) {
-      let newEndDate: Date = new Date(endTimestamp.getTime());
+      const newEndDate: Date = new Date(endTimestamp.getTime());
       newEndDate.setTime(endTimestamp.getTime() - THIRTY_MINUTES);
       setEndTimestamp(newEndDate);
+      timeChangeCallback(startTimestamp, newEndDate);
     }
   }
 
   return (
-    <dialog open className={classes.eventEditDialogue}>
+    <dialog
+      open
+      className={classes.eventEditDialogue}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" && !event.shiftKey && !(event.target instanceof HTMLButtonElement)) {
+          event.preventDefault();
+          void editEvent();
+        }
+      }}
+    >
       <h2>EDIT DETAILS</h2>
       <input value={title} placeholder='Title' onChange={(e) => setTitle(e.target.value)} maxLength={100} />
       <textarea value={description} placeholder='Description' onChange={(e) => setDescription(e.target.value)} maxLength={255} />
