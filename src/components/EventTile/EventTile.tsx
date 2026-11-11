@@ -44,7 +44,7 @@ export default function EventTile(props: EventTileProperties) {
   return (
     <>
       <div onClick={handleOnClick}
-        className={classes.eventTile}
+        className={`${classes.eventTile} ${classes.entranceAnimation}`}
         style={{
           top: props.topPosition, height: props.bottomPosition - props.topPosition,
           left: props.leftPosition, width: props.rightPosition - props.leftPosition
