@@ -5,6 +5,7 @@
 }
 
 .inner {
+    background-color: #1e1e24;
 	display: flex;
 	flex-direction: column;
 	border: solid gray 2px;
@@ -25,6 +26,7 @@
 
 h1 {
     font-size: xx-large;
+    color: #d81b60;
 }
 
 .waveLetter {
