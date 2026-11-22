@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import AddConnection from "../AddConnection/AddConnection";
 import classes from './CalendarView.module.css'
 import Calendar, { type EventDetails } from "../Calendar/Calendar";
+import Countdown from "../Countdown/Countdown";
 
 const FETCH_EVENTS_ENDPOINT = "https://ng9l7u3ui2.execute-api.ca-central-1.amazonaws.com/fetch-events";
 
@@ -130,6 +131,7 @@ export default function CalendarView() {
           refreshEvents={refreshEvents}
         />
       ))}
+      <Countdown />
       <AddConnection />
     </div>
   )
